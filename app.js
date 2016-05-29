@@ -1,17 +1,18 @@
 #! /usr/bin/env node
-var cli = require('cli');
-var fs = require('fs');
-var http = require('https');
-var readline = require('readline-sync');
-var chalk = require('chalk');
-var playmusic = new (require('playmusic'))();
-var mplayer = require('child_process').spawn;
-var os = require('os');
-var m3uWriter = require('m3u').extendedWriter();
-var Q = require('q');
-var mkdirp = require('mkdirp');
-var path = require('path');
-var meta = require('ffmetadata');
+const cli = require('cli');
+const fs = require('fs');
+const http = require('https');
+const readline = require('readline-sync');
+const chalk = require('chalk');
+const playmusic = new (require('playmusic'))();
+const mplayer = require('child_process').spawn;
+const os = require('os');
+const m3uWriter = require('m3u').extendedWriter();
+const Q = require('q');
+const mkdirp = require('mkdirp');
+const path = require('path');
+const meta = require('ffmetadata');
+const crypt = require('./crypt');
 
 var resultTypes = {
   track: '1',
@@ -163,14 +164,19 @@ function settings() {
       'albumnaming': '{album}',
       'playlistnaming': '{name} - {albumArtist}'
     };
+    console.log('Initializing first time setup!');
+    settings.email = readline.question('Please enter your email adress used for Google Services:\n');
+    settings.password = crypt.encrypt(readline.question('Please enter your password:\n', {hideEchoBack: true}));
 
     fs.writeFileSync(getLocation('settings'), JSON.stringify(settings, null, 2));
-    cli.fatal('Go to ~/.gmplayerrc and add your email and password');
   }
   else {
     var settings = JSON.parse(fs.readFileSync(getLocation('settings')));
     if (settings.email == 'add_your_email_here') cli.fatal('Go to ~/.gmplayerrc and add your email and password');
-    else return settings;
+    else {
+      settings.password = crypt.decrypt(settings.password);
+      return settings;
+    }
   }
 }
 
