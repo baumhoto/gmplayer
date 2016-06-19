@@ -2,14 +2,16 @@ const mkdirp = require('mkdirp');
 const Q = require('q');
 const m3uWriter = require('m3u').extendedWriter();
 const utils = require('./utils');
+const fs = require('fs');
+const http = require('https');
 
 var cli = require('cli');
 
-function track(track) {
+function track(trk) {
   var deferred = Q.defer();
 
-  var songPath = utils.get('trackpath', track);
-  var songDirectory = utils.get('trackdir', track);
+  var songPath = utils.get('trackpath', trk);
+  var songDirectory = utils.get('trackdir', trk);
 
   if (fs.existsSync(songPath)) {
     console.log('Song already found in offline storage, playing that instead.');
@@ -18,7 +20,7 @@ function track(track) {
     return deferred.promise;
   }
 
-  global.playmusic.getStreamUrl(track.nid, (err, url) => {
+  global.playmusic.getStreamUrl(trk.nid, (err, url) => {
     if (err) {
       cli.error(err);
       deferred.reject(err);
@@ -30,7 +32,7 @@ function track(track) {
 
       http.get(url, (res) => {
         var size = parseInt(res.headers['content-length']);
-        if (cli.options.song) console.log('Downloading ' + utils.customNaming(utils.settings().tracknaming, track));
+        if (cli.options.song) console.log('Downloading ' + utils.customNaming(utils.settings().tracknaming, trk));
 
         res.on('data', (data) => {
           if (!fs.existsSync(songPath)) {
@@ -43,7 +45,7 @@ function track(track) {
         });
 
         res.on('end', () => {
-          utils.metadata(songPath, track, () => {
+          utils.metadata(songPath, trk, () => {
             if (cli.options.song && cli.options.downloadonly) process.exit();
             if (cli.options.album) cli.progress(++cli.album.size/ cli.album.total);
             deferred.resolve(songPath);
@@ -58,7 +60,6 @@ function track(track) {
 }
 
 function album(album) {
-  console.log('Downloading an album', album);
   var deferred = Q.defer();
   var lastDownload = Q('dummy');
 
@@ -77,12 +78,12 @@ function album(album) {
 
     cli.progress(0 / cli.album.total);
 
-    fullAlbumDetails.tracks.forEach((track) => {
+    fullAlbumDetails.tracks.forEach((trk) => {
       track.albumArtist = fullAlbumDetails.albumArtist;
-      m3uWriter.file(utils.get('trackname', track));
+      m3uWriter.file(utils.get('trackname', trk));
 
-      lastDownload = lastDownload.then(function(value) {
-        return track(track);
+      lastDownload = lastDownload.then((value) => {
+        return track(trk)
       });
     });
 
