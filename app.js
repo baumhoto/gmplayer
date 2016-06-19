@@ -20,11 +20,11 @@ var resultTypes = {
 };
 
 var filters = {
-  onlyAlbums: function (entry) {
+  onlyAlbums: (entry) => {
     return entry.type === resultTypes.album || entry.contentType == resultTypes.album;
   },
 
-  onlyTracks: function (entry) {
+  onlyTracks: (entry) => {
     return entry.type === resultTypes.track || entry.contentType == resultTypes.track;
   }
 };
@@ -36,7 +36,7 @@ cli.parse({
   downloadonly: ['d', 'If you only want to download the song instead of playing it (In combination with either -s or -a)'],
 });
 
-cli.main(function (args, options) {
+cli.main((args, options) => {
   settings();
   cli.options = options;
 
@@ -60,7 +60,7 @@ cli.main(function (args, options) {
 function search (query, resultsFilter) {
   var deferred = Q.defer();
 
-  playmusic.init({email: settings().email, password: settings().password}, function (err) {
+  playmusic.init({email: settings().email, password: settings().password}, (err) => {
     if (err) {
       cli.spinner('', true);
       cli.error(err);
@@ -69,8 +69,8 @@ function search (query, resultsFilter) {
     }
 
     if (cli.options.library) {
-      playmusic.getAllTracks(function (err, all) {
-       var results = all.data.items.filter(function (track) {
+      playmusic.getAllTracks((err, all) => {
+       var results = all.data.items.filter((track) => {
           var match = track.title.match(query) + track.album.match(query) + track.artist.match(query);
           return match.length > 0;
         });
@@ -84,7 +84,7 @@ function search (query, resultsFilter) {
       });
     }
     else {
-      playmusic.search(query, 20, function (err, results) {
+      playmusic.search(query, 20, (err, results) => {
         if (err) {
           cli.spinner('', true);
           cli.error(err);
@@ -110,16 +110,16 @@ function lookup (query) {
 
   cli.spinner('Looking up requested song');
 
-  search(query, filters.onlyTracks).then(function (results) {
+  search(query, filters.onlyTracks).then((results) => {
     process.stdout.write('\n');
 
     if (results[0].type) {
-      results.forEach(function (entry, index) {
+      results.forEach((entry, index) => {
         console.log(chalk.yellow('[') + index + chalk.yellow('] ') + chalk.white(entry.track.title) + ' - ' + chalk.grey(entry.track.artist));
       });
     }
     else {
-      results.forEach(function (entry, index) {
+      results.forEach((entry, index) => {
         console.log(chalk.yellow('[') + index + chalk.yellow('] ') + chalk.white(entry.title) + ' - ' + chalk.grey(entry.artist));
       });
     }
@@ -138,10 +138,10 @@ function lookupAlbum (query) {
 
   cli.spinner('Looking up requested album');
 
-  search(query, filters.onlyAlbums).then(function (results) {
+  search(query, filters.onlyAlbums).then((results) => {
     process.stdout.write('\n');
 
-    results.forEach(function (entry, index) {
+    results.forEach((entry, index) => {
       console.log(chalk.yellow('[') + index + chalk.yellow('] ') + chalk.white(entry.album.name) + ' - ' + chalk.grey(entry.album.artist));
     });
 
@@ -206,7 +206,7 @@ function play(file, playlist) {
   var isfiltered = false;
   console.log('Playing ' + path.basename(file) + '\n');
 
-  player.stdout.on('data', function (data) {
+  player.stdout.on('data', (data) => {
     if (data.toString().substr(0,2) == 'A:' && !isfiltered) {
       player.stdout.pipe(process.stdout);
       isfiltered = true;
@@ -217,11 +217,11 @@ function play(file, playlist) {
   require('readline').createInterface({input : process.stdin, output : process.stdout});
   process.stdin.pipe(player.stdin);
 
-  player.on('error', function (data) {
+  player.on('error', (data) => {
     cli.fatal('There was an error playing your song, maybe you need to install mplayer?');
   });
 
-  player.on('exit', function () {
+  player.on('exit', () => {
     process.exit();
   });
 }
@@ -238,21 +238,21 @@ function download (track) {
     return deferred.promise;
   }
 
-  playmusic.getStreamUrl(track.nid, function (err, url) {
+  playmusic.getStreamUrl(track.nid, (err, url) => {
     if (err) {
       cli.error(err);
       deferred.reject(err);
       return;
     }
 
-    mkdirp(songDirectory, function (err) {
+    mkdirp(songDirectory, (err) => {
       if (err) cli.error(err);
 
-      http.get(url, function (res) {
+      http.get(url, (res) => {
         var size = parseInt(res.headers['content-length']);
         if (cli.options.song) console.log('Downloading ' + customNaming(settings().tracknaming, track));
 
-        res.on('data', function (data) {
+        res.on('data', (data) => {
           if (!fs.existsSync(songPath)) {
             fs.writeFileSync(songPath, data);
           } else {
@@ -262,8 +262,8 @@ function download (track) {
           if (cli.options.song) cli.progress(fileSize / size);
         });
 
-        res.on('end', function () {
-          metadata(songPath, track, function () {
+        res.on('end', () => {
+          metadata(songPath, track, () => {
             if (cli.options.song && cli.options.downloadonly) process.exit();
             if (cli.options.album) cli.progress(++cli.album.size/ cli.album.total);
             deferred.resolve(songPath);
@@ -281,7 +281,7 @@ function downloadAlbum (album) {
   var deferred = Q.defer();
   var lastDownload = Q('dummy');
 
-  playmusic.getAlbum(album.albumId, true, function (err, fullAlbumDetails) {
+  playmusic.getAlbum(album.albumId, true, (err, fullAlbumDetails) => {
     if (err) {
       console.warn(err);
       deferred.reject(err);
@@ -295,7 +295,7 @@ function downloadAlbum (album) {
 
     cli.progress(0 / cli.album.total);
 
-    fullAlbumDetails.tracks.forEach(function (track) {
+    fullAlbumDetails.tracks.forEach((track) => {
       track.albumArtist = fullAlbumDetails.albumArtist;
       m3uWriter.file(getTrackFilename(track));
       lastDownload = lastDownload.then(function(value) {
@@ -303,7 +303,7 @@ function downloadAlbum (album) {
       });
     });
 
-    lastDownload.then(function () {
+    lastDownload.then(() => {
       cli.spinner('', true);
       if (cli.options.downloadonly) {
         writePlaylist(m3uWriter, album);
@@ -394,7 +394,7 @@ function metadata(path, data, cb) {
     title: data.title
   };
 
-  meta.write(path, data, function (err) {
+  meta.write(path, data, (err) => {
     if (err) console.warn(err);
     cb();
   });
