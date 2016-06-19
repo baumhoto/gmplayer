@@ -1,10 +1,4 @@
 #! /usr/bin/env node
-//Importing first party modules
-const fs = require('fs');
-const http = require('https');
-const mplayer = require('child_process').spawn;
-const os = require('os');
-
 //Importing local modules
 const utils = require('./utils');
 const play = require('./play');
@@ -27,7 +21,7 @@ cli.main((args, options) => {
   cli.options = options;
 
   if (options.song) {
-    lookup.song(options.song)
+    lookup.track(options.song)
       .then(download.track)
       .then(play.track);
   }
