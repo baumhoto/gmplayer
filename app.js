@@ -12,7 +12,7 @@ global.playmusic = new (require('playmusic'))();
 cli.parse({
   song: ['s', 'The song you want to download/play.', 'string'],
   album: ['a', 'The album you want to download/play.', 'string'],
-  library: ['l', 'List all items from your library (In combination with either -s or -a)'],
+  // library: ['l', 'List all items from your library (In combination with either -s or -a)'],
   downloadonly: ['d', 'If you only want to download the song instead of playing it (In combination with either -s or -a)'],
 });
 
