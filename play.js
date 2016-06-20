@@ -19,7 +19,7 @@ function mplayerArgs (filename, isPlaylist) {
 }
 
 function album(playlistFile) {
-  play(playlistFile, true);
+  track(playlistFile, true);
 }
 
 //FIXME: For some reason mplayer quits after a few seconds of playing a song.
