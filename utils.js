@@ -111,10 +111,42 @@ function settings() {
   }
 }
 
+function convert(list) {
+  var data = {};
+  for (track of list) {
+    if (!data[track.albumId]) {
+      data[track.albumId] = {
+        "kind": "sj#album",
+        "tracks": [],
+        "name": track.album,
+        "albumId": track.albumId,
+        "albumArtist": track.albumArtist,
+        "artist": track.artist,
+        "artistId": track.artistId,
+        "year": track.year,
+        "albumArtRef": track.albumArtRef[0].url
+      };
+    }
+
+    data[track.albumId].tracks.push(track);
+  }
+
+  var albums = [];
+
+  for (var album in data) {
+    if (data.hasOwnProperty(album)) {
+      albums.push(data[album]);
+    }
+  }
+
+  return albums;
+}
+
 module.exports = {
   "writePlaylist" : writePlaylist,
   "get" : get,
   "customNaming" : customNaming,
   "metadata" : metadata,
-  "settings" : settings
+  "settings" : settings,
+  "convert" : convert
 }

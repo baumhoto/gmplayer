@@ -31,11 +31,14 @@ function search (query, resultsFilter) {
 
     if (cli.options.library) {
       global.playmusic.getAllTracks((err, all) => {
-
         var results = all.data.items.filter((track) => {
           var match = track.title.match(query) || track.album.match(query) || track.artist.match(query);
           return match != null;
         });
+
+        if (cli.options.album) {
+          results = utils.convert(results);
+        }
 
         if (results.length == 0) {
           cli.spinner('', true);
@@ -104,14 +107,22 @@ function album(query) {
   search(query, filters.onlyAlbums).then((results) => {
     process.stdout.write('\n');
 
-    results.forEach((entry, index) => {
-      console.log(chalk.yellow('[') + index + chalk.yellow('] ') + chalk.white(entry.album.name) + ' - ' + chalk.grey(entry.album.artist));
-    });
+    if (!cli.options.library) {
+      results.forEach((entry, index) => {
+        console.log(chalk.yellow('[') + index + chalk.yellow('] ') + chalk.white(entry.album.name) + ' - ' + chalk.grey(entry.album.artist));
+      });
+    }
+    else {
+      results.forEach((entry, index) => {
+        console.log(chalk.yellow('[') + index + chalk.yellow('] ') + chalk.white(entry.name) + ' - ' + chalk.grey(entry.artist));
+      });
+    }
 
     var input = readline.questionInt('What album do you want to play? #');
     cli.spinner('', true);
 
-    deferred.resolve(results[input].album);
+    if (!cli.options.library) deferred.resolve(results[input].album);
+    else deferred.resolve(results[input])
   });
 
   return deferred.promise;
