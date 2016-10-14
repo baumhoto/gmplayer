@@ -40,6 +40,6 @@ function track(file, playlist) {
 }
 
 module.exports = {
-  "album": album,
-  "track": track
+  album: album,
+  track: track
 }

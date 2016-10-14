@@ -11,11 +11,11 @@ var resultTypes = {
 
 var filters = {
   onlyAlbums: (entry) => {
-    return entry.type === resultTypes.album || entry.contentType == resultTypes.album;
+    return entry.type === resultTypes.album || entry.contentType=== resultTypes.album;
   },
 
   onlyTracks: (entry) => {
-    return entry.type === resultTypes.track || entry.contentType == resultTypes.track;
+    return entry.type === resultTypes.track || entry.contentType=== resultTypes.track;
   }
 };
 
@@ -40,7 +40,7 @@ function search (query, resultsFilter) {
           results = utils.convert(results);
         }
 
-        if (results.length == 0) {
+        if (results.length=== 0) {
           cli.spinner('', true);
           cli.error('No songs/albums were found with your query in your library, please try again!');
         }
@@ -129,6 +129,6 @@ function album(query) {
 }
 
 module.exports = {
-  "album": album,
-  "track": track
+  album: album,
+  track: track
 }

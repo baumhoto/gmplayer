@@ -45,12 +45,34 @@ function track(trk) {
         });
 
         res.on('end', () => {
-          utils.metadata(songPath, trk, () => {
-            if (cli.options.song && cli.options.downloadonly) process.exit();
-            if (cli.options.album) cli.progress(++cli.album.size/ cli.album.total);
-            deferred.resolve(songPath);
-          });
+          trk.artfile = utils.get('temp') + trk.albumId + '.jpg';
 
+          if (fs.existsSync(trk.artfile)) {
+            utils.metadata(songPath, trk, () => {
+              if (cli.options.song && cli.options.downloadonly) process.exit();
+              if (cli.options.album) cli.progress(++cli.album.size/ cli.album.total);
+              deferred.resolve(songPath);
+            });
+          }
+          else {
+            require('http').get(trk.albumArtRef[0].url, (res) => {
+              res.on('data', (data) => {
+                if (!fs.existsSync(trk.artfile)) {
+                  fs.writeFileSync(trk.artfile, data);
+                } else {
+                  fs.appendFileSync(trk.artfile, data);
+                }
+              });
+
+              res.on('end', () => {
+                  utils.metadata(songPath, trk, () => {
+                    if (cli.options.song && cli.options.downloadonly) process.exit();
+                    if (cli.options.album) cli.progress(++cli.album.size/ cli.album.total);
+                    deferred.resolve(songPath);
+                  });
+              });
+            });
+          }
         });
       });
     })
@@ -64,7 +86,6 @@ function album(album) {
   var lastDownload = Q('dummy');
 
   global.playmusic.getAlbum(album.albumId, true, (err, fullAlbumDetails) => {
-    console.log()
     if (err) {
       console.warn(err);
       deferred.reject(err);
@@ -101,6 +122,6 @@ function album(album) {
 }
 
 module.exports = {
-  "album": album,
-  "track": track
+  album: album,
+  track: track
 }

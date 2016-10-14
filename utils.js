@@ -22,7 +22,7 @@ function writePlaylist (writer, album) {
 }
 
 function get(what, data) {
-  if (what == 'location') {
+  if (what === 'location') {
     switch (data) {
       case 'settings':
         return process.env['HOME'] + '/.gmplayerrc';
@@ -32,26 +32,29 @@ function get(what, data) {
         break;
     }
   }
-  else if (what == "trackname") {
+  else if (what === 'trackname') {
     return customNaming(settings().tracknaming, data) + '.mp3';
   }
-  else if (what == "albumname") {
+  else if (what === 'albumname') {
     return path.join(
       get('location', 'music'),
       customNaming(settings().albumnaming, data)
     );
   }
-  else if (what == "trackdir") {
+  else if (what === 'trackdir') {
     return path.join(
       get('location', 'music'),
       customNaming(settings().albumnaming, data)
     );
   }
-  else if (what == "trackpath") {
+  else if (what === 'trackpath') {
     return path.join(
       get('trackdir', data),
       get('trackname', data)
     );
+  }
+  else if (what === 'temp') {
+    return '/tmp/';
   }
 }
 
@@ -72,6 +75,12 @@ function customNaming (string, info) {
 }
 
 function metadata(path, data, cb) {
+  var options = {
+    attachments : [
+      data.artfile
+    ]
+  }
+
   var data = {
     artist: data.artist,
     album: data.album,
@@ -79,7 +88,7 @@ function metadata(path, data, cb) {
     title: data.title
   };
 
-  meta.write(path, data, (err) => {
+  meta.write(path, data, options, (err) => {
     if (err) console.warn(err);
     cb();
   });
@@ -90,7 +99,7 @@ function settings() {
     var settings = {
       'email': 'add_your_email_here',
       'password': 'add_your_password_here',
-      'musicdirectory': process.env["HOME"] + '/Music/gmplayer',
+      'musicdirectory': process.env['HOME'] + '/Music/gmplayer',
       'tracknaming': '{title} - {artist}',
       'albumnaming': '{album}',
       'playlistnaming': '{name} - {albumArtist}'
@@ -103,7 +112,7 @@ function settings() {
   }
   else {
     var settings = JSON.parse(fs.readFileSync(get('location', 'settings')));
-    if (settings.email == 'add_your_email_here') cli.fatal('Go to ~/.gmplayerrc and add your email and password');
+    if (settings.email === 'add_your_email_here') cli.fatal('Go to ~/.gmplayerrc and add your email and password');
     else {
       settings.password = crypt.decrypt(settings.password);
       return settings;
@@ -116,15 +125,15 @@ function convert(list) {
   for (track of list) {
     if (!data[track.albumId]) {
       data[track.albumId] = {
-        "kind": "sj#album",
-        "tracks": [],
-        "name": track.album,
-        "albumId": track.albumId,
-        "albumArtist": track.albumArtist,
-        "artist": track.artist,
-        "artistId": track.artistId,
-        "year": track.year,
-        "albumArtRef": track.albumArtRef[0].url
+        'kind': 'sj#album',
+        'tracks': [],
+        'name': track.album,
+        'albumId': track.albumId,
+        'albumArtist': track.albumArtist,
+        'artist': track.artist,
+        'artistId': track.artistId,
+        'year': track.year,
+        'albumArtRef': track.albumArtRef[0].url
       };
     }
 
@@ -143,10 +152,10 @@ function convert(list) {
 }
 
 module.exports = {
-  "writePlaylist" : writePlaylist,
-  "get" : get,
-  "customNaming" : customNaming,
-  "metadata" : metadata,
-  "settings" : settings,
-  "convert" : convert
+  'writePlaylist' : writePlaylist,
+  'get' : get,
+  'customNaming' : customNaming,
+  'metadata' : metadata,
+  'settings' : settings,
+  'convert' : convert
 }
