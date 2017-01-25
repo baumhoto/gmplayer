@@ -20,7 +20,7 @@ function track(trk) {
     return deferred.promise;
   }
 
-  global.playmusic.getStreamUrl(trk.nid, (err, url) => {
+  global.playmusic.getStreamUrl(trk.id != null ? trk.id : trk.nid, (err, url) => {
     if (err) {
       cli.error(err);
       deferred.reject(err);
